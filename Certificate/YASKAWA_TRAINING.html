@@ -5,16 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YASKAWA Training Registration</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .bg-template {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: -1;
-      width: 100%;
-      height: 100%;
-    }
-  </style>
 </head>
 <body class="bg-light">
   <div class="container mt-5">
@@ -76,8 +66,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-analytics.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-analytics.js";
     import { jsPDF } from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
     const firebaseConfig = {
@@ -115,7 +105,7 @@
       try {
         await addDoc(collection(db, "trainee_submissions"), data);
         successMsg.classList.remove("d-none");
-        generateCertificate(data);
+        await generateCertificate(data);
         form.reset();
         setTimeout(() => successMsg.classList.add("d-none"), 3000);
         submitBtn.disabled = false;
@@ -137,8 +127,8 @@
 
     async function generateCertificate(data) {
       const doc = new jsPDF({ orientation: "landscape" });
-      const bg = await loadImageAsBase64("/mnt/data/ROBOT-CERTIFICATE-BG-01.jpg");
-      const sign = await loadImageAsBase64(`/mnt/data/${data.trainer}`);
+      const bg = await loadImageAsBase64("Certificate/ROBOT-CERTIFICATE-BG-01.jpg");
+      const sign = await loadImageAsBase64(`Certificate/${data.trainer}`);
 
       doc.addImage(bg, "JPEG", 0, 0, 297, 210);
       doc.setFontSize(24);
@@ -148,7 +138,6 @@
       doc.text("Date: " + data.date, 148, 125, { align: "center" });
 
       doc.addImage(sign, "PNG", 200, 135, 60, 25);
-
       doc.save(`Certificate_${data.fullname}.pdf`);
     }
   </script>
