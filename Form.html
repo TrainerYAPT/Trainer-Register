@@ -1,0 +1,39 @@
+<!-- หน้า HTML -->
+<button onclick="generateStyledCertificate()">🎓 สร้าง Certificate</button>
+<canvas id="previewCanvas" class="d-none"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  async function generateStyledCertificate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape', 'pt', 'a4'); // landscape certificate
+    const imageURL = "certificate_template.jpg"; // นำ Certificate ไปแปลงเป็น jpg และใส่ในโปรเจกต์
+
+    // Load image
+    const img = new Image();
+    img.src = imageURL;
+
+    img.onload = () => {
+      doc.addImage(img, 'JPEG', 0, 0, 842, 595); // เต็ม A4 landscape
+
+      // ✅ กำหนดข้อความที่ต้องการเติม
+      const traineeName = "MR. CHALIT MOCHITPHIMAI";
+      const companyName = "PROSPIRA (THAILAND) CO., LTD.";
+      const courseName = "BASIC OPERATION AND INSTRUCTION (YRC1000)";
+      const date = "26-27 JUNE, 2025";
+
+      // ใส่ข้อความทับตามตำแหน่งที่ต้องการ
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(companyName, 80, 210);  // ปรับตำแหน่งตามจริง
+      doc.text(traineeName, 80, 230);
+
+      doc.setFontSize(14);
+      doc.text(courseName, 80, 280);
+      doc.text(date, 80, 300);
+
+      // บันทึก
+      doc.save(`Certificate_${traineeName}.pdf`);
+    };
+  }
+</script>

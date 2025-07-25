@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/icon.png" href="images/icon.png" />
+  <title>YASKAWA Training Registration</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4 text-center">ลงทะเบียนรับใบ Certificate - YASKAWA Training</h2>
+    <form id="registrationForm">
+      <div class="mb-3">
+        <label for="fullname" class="form-label">ชื่อ - นามสกุล (ภาษาอังกฤษตัวใหญ่เท่านั้น)</label>
+        <input type="text" class="form-control" id="fullname" required>
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
+        <input type="tel" class="form-control" id="phone" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">อีเมล</label>
+        <input type="email" class="form-control" id="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="company" class="form-label">ชื่อบริษัท / สถานศึกษา</label>
+        <input type="text" class="form-control" id="company" required>
+      </div>
+      <div class="mb-3">
+        <label for="course" class="form-label">หลักสูตรที่เข้าอบรม</label>
+        <select class="form-select" id="course" required>
+          <option selected disabled>เลือกหลักสูตร</option>
+          <option value="ROBOT BASIC OPERATION">ROBOT BASIC OPERATION</option>
+          <option value="ROBOT INSTRUCTION">ROBOT INSTRUCTION</option>
+          <option value="ROBOT ADVANCE">ROBOT ADVANCE</option>
+          <option value="ROBOT MAINTENANCE">ROBOT MAINTENANCE</option>
+          <option value="ROBOT INSPECTION">ROBOT INSPECTION</option>
+          <option value="ROBOT MECHANICAL EXCHANGE">ROBOT MECHANICAL EXCHANGE</option>
+          <option value="ROBOT ARC WELDING">ROBOT ARC WELDING</option>
+          <option value="ROBOT SPOT WELDING">ROBOT SPOT WELDING</option>
+          <option value="ROBOT I/O SIGNAL">ROBOT I/O SIGNAL</option>
+          <option value="MOTOSIM ROBOT">MOTOSIM ROBOT</option>
+          <option value="BASIC COMMUNICATION CONVEYOR">BASIC COMMUNICATION CONVEYOR</option>
+          <option value="BASIC COMMUNICATION CAMERA">BASIC COMMUNICATION CAMERA</option>
+          <option value="BASIC COMMUNICATION PLC">BASIC COMMUNICATION PLC</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="date" class="form-label">วันที่อบรม</label>
+        <input type="date" class="form-control" id="date" required>
+      </div>
+      <button type="submit" class="btn btn-primary">ลงทะเบียน</button>
+      <button type="reset" class="btn btn-secondary ms-2">ล้างฟอร์ม</button>
+    </form>
+    <div class="alert alert-success mt-3 d-none" id="successMsg">บันทึกข้อมูลเรียบร้อยแล้ว! กำลังดาวน์โหลดใบ Certificate...</div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzNykwZ6VoV_nteMQEo3oRDaX7Ca59Ti4",
+      authDomain: "yaskawa-web-th.firebaseapp.com",
+      projectId: "yaskawa-web-th",
+      storageBucket: "yaskawa-web-th.appspot.com",
+      messagingSenderId: "117479927006",
+      appId: "1:117479927006:web:0b4ce8fef4c0428bdea64f",
+      measurementId: "G-63TQB1N2K9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const form = document.getElementById("registrationForm");
+    const successMsg = document.getElementById("successMsg");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      let fullname = document.getElementById("fullname").value.trim().toUpperCase();
+      let phone = document.getElementById("phone").value.trim();
+      let email = document.getElementById("email").value.trim();
+      let company = document.getElementById("company").value.trim();
+      let course = document.getElementById("course").value;
+      let date = document.getElementById("date").value;
+
+      // Validation
+      const nameRegex = /^[A-Z\s]+$/;
+      const phoneRegex = /^\d{10}$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!nameRegex.test(fullname)) {
+        alert("กรุณากรอกชื่อ-นามสกุลเป็นภาษาอังกฤษตัวใหญ่เท่านั้น (A-Z)");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (!phoneRegex.test(phone)) {
+        alert("กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก)");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (!emailRegex.test(email)) {
+        alert("รูปแบบอีเมลไม่ถูกต้อง");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (!company) {
+        alert("กรุณากรอกชื่อบริษัท / สถานศึกษา");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (course === "เลือกหลักสูตร") {
+        alert("กรุณาเลือกหลักสูตรที่อบรม");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (!date) {
+        alert("กรุณาระบุวันที่อบรม");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const data = { fullname, phone, email, company, course, date };
+
+      db.collection("trainee_submissions").add(data)
+        .then(() => {
+          successMsg.classList.remove("d-none");
+          generateCertificate(data);
+          form.reset();
+          setTimeout(() => {
+            successMsg.classList.add("d-none");
+            submitBtn.disabled = false;
+          }, 3000);
+        })
+        .catch((error) => {
+          alert("เกิดข้อผิดพลาด: " + error.message);
+          submitBtn.disabled = false;
+        });
+    });
+
+    function generateCertificate(data) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text("YASKAWA Training Certificate", 20, 30);
+      doc.setFontSize(12);
+      doc.text(`This certifies that: ${data.fullname}`, 20, 50);
+      doc.text(`Company: ${data.company}`, 20, 60);
+      doc.text(`Has completed: ${data.course}`, 20, 70);
+      doc.text(`Date of Training: ${data.date}`, 20, 80);
+      doc.save(`Certificate_${data.fullname}.pdf`);
+    }
+  </script>
+</body>
+</html>
